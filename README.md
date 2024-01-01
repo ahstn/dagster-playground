@@ -9,6 +9,13 @@ pip install -e ".[dev]"
 dagster dev
 ```
 
+## References
+- [Creating a new Dagster Project | Dagster](https://docs.dagster.io/getting-started/create-new-project)
+- [The fancy data stack - batch version | Medium](https://www.blef.fr/the-fancy-data-stack/)
+- [A portable data stack with Dagster, Docker, DuckDB, dbt and Superset | Medium](https://medium.com/data-engineers-notes/a-portable-data-stack-with-dagster-docker-duckdb-dbt-and-superset-f5ce42c1012)
+- [dagster-project-example | GitHub](https://github.com/AntonFriberg/dagster-project-example)
+- [practical-data-engineering | GitHub](https://github.com/sspaeti-com/practical-data-engineering)
+
 ---
 
 ## Dagster Provided README
