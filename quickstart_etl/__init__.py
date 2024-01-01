@@ -5,6 +5,7 @@ from dagster import (
     load_assets_from_package_module,
 )
 
+from .resources.infra import postgres_connection, PagilaDatabase
 from . import assets
 
 daily_refresh_schedule = ScheduleDefinition(
@@ -12,5 +13,9 @@ daily_refresh_schedule = ScheduleDefinition(
 )
 
 defs = Definitions(
-    assets=load_assets_from_package_module(assets), schedules=[daily_refresh_schedule]
+    assets=load_assets_from_package_module(assets), 
+    schedules=[daily_refresh_schedule],
+    resources={
+        "psql_conn": PagilaDatabase()
+    }
 )
