@@ -1,0 +1,7 @@
+pagila_dbt:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: ../database.duckdb
+      schema: public
