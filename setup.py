@@ -18,8 +18,17 @@ setup(
         "textblob",
         "tweepy",
         "wordcloud",
+
+        "dagster-duckdb==0.21.13",
+        "dagster-duckdb-pandas==0.21.13",
+        "duckdb==0.9.2",
     ],
     extras_require={
-        "dev": ["dagster-webserver", "pytest", "ruff"]
+        "dev": [
+          "dagster-webserver", 
+          "pytest", 
+          "ruff",
+          "pandas-stubs"
+        ]
     },
 )

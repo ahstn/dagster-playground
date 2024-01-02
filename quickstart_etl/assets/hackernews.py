@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 from dagster import AssetExecutionContext, MetadataValue, asset
-from wordcloud import STOPWORDS, WordCloud
 
 
 @asset(group_name="hackernews", compute_kind="HackerNews API")
@@ -48,36 +47,3 @@ def hackernews_topstories(
         }
     )
     return df
-
-
-@asset(group_name="hackernews", compute_kind="Plot")
-def hackernews_topstories_word_cloud(
-    context: AssetExecutionContext, hackernews_topstories: pd.DataFrame
-) -> bytes:
-    """Exploratory analysis: Generate a word cloud from the current top 500 HackerNews top stories.
-    Embed the plot into a Markdown metadata for quick view.
-
-    Read more about how to create word clouds in http://amueller.github.io/word_cloud/.
-    """
-    stopwords = set(STOPWORDS)
-    stopwords.update(["Ask", "Show", "HN"])
-    titles_text = " ".join([str(item) for item in hackernews_topstories["title"]])
-    titles_cloud = WordCloud(stopwords=stopwords, background_color="white").generate(titles_text)
-
-    # Generate the word cloud image
-    plt.figure(figsize=(8, 8), facecolor=None)
-    plt.imshow(titles_cloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.tight_layout(pad=0)
-
-    # Save the image to a buffer and embed the image into Markdown content for quick view
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png")
-    image_data = base64.b64encode(buffer.getvalue())
-    md_content = f"![img](data:image/png;base64,{image_data.decode()})"
-
-    # Attach the Markdown content as metadata to the asset
-    # Read about more metadata types in https://docs.dagster.io/_apidocs/ops#metadata-types
-    context.add_output_metadata({"plot": MetadataValue.md(md_content)})
-
-    return image_data
