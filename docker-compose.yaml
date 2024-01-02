@@ -11,7 +11,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./sql-data/:/docker-entrypoint-initdb.d
+      - ${PWD}/docker/postgresql/:/docker-entrypoint-initdb.d/
 
   clickhouse:
     image: clickhouse/clickhouse-server
