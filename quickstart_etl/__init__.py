@@ -8,16 +8,23 @@ from dagster import (
 from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
 
-from . import assets
+from .assets import pagila
 from .assets.pagila import (dbt_resource)
 from .resources.infra import PagilaDatabase
+
+pagila_assets = load_assets_from_package_module(
+    pagila,
+    group_name="pagila",
+    # all of these assets live in the duckdb database, under the schema raw_data
+    key_prefix=["pagila"],
+)
 
 daily_refresh_schedule = ScheduleDefinition(
     job=define_asset_job(name="all_assets_job"), cron_schedule="0 0 * * *"
 )
 
 defs = Definitions(
-    assets=load_assets_from_package_module(assets), 
+    assets=[*pagila_assets], 
     schedules=[daily_refresh_schedule],
     resources={
         "psql_conn": PagilaDatabase(),
