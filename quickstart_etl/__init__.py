@@ -6,6 +6,8 @@ from dagster import (
 )
 
 from dagster_duckdb import DuckDBResource
+from dagster_duckdb_pandas import DuckDBPandasIOManager
+
 from .resources.infra import PagilaDatabase
 from . import assets
 
@@ -20,6 +22,10 @@ defs = Definitions(
         "psql_conn": PagilaDatabase(),
         "duckdb": DuckDBResource(
             database="database.duckdb", 
+            schema="public",
+        ),
+        "duckdb_io": DuckDBPandasIOManager(
+            database="database.duckdb",
             schema="public",
         )
     }
