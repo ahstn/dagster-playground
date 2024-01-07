@@ -1,6 +1,28 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "dagster-playground"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
 
 [tool.dagster]
 module_name = "quickstart_etl"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dagster = "^1.5.14"
+dagster-webserver = "^1.5.14"
+dagster-duckdb = "^0.21.14"
+dagster-duckdb-pandas = "^0.21.14"
+duckdb = "^0.9.2"
+dagster-dbt = "^0.21.14"
+dbt-duckdb = "^1.7.0"
+python-dotenv = "^1.0.0"
+psycopg = {extras = ["binary"], version = "^3.1.17"}
+
+[tool.poetry.group.dev.dependencies]
+pytest-ruff = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

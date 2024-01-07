@@ -1,5 +1,5 @@
 import os
-import psycopg2
+import psycopg
 from dagster import ConfigurableResource
 from dotenv import load_dotenv
 
@@ -8,7 +8,7 @@ class PagilaDatabase(ConfigurableResource):
 
     def connection(self):
         load_dotenv()
-        return psycopg2.connect(
+        return psycopg.connect(
             database=os.getenv("PG_DATABASE", "postgres"),
             user=os.getenv("PG_USERNAME", "postgres"),
             password=os.getenv("PG_PASSWORD", "postgres"),
