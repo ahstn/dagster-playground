@@ -8,8 +8,9 @@ from dagster import (
 from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
 
-from .resources.infra import PagilaDatabase
 from . import assets
+from .assets.pagila import (dbt_resource)
+from .resources.infra import PagilaDatabase
 
 daily_refresh_schedule = ScheduleDefinition(
     job=define_asset_job(name="all_assets_job"), cron_schedule="0 0 * * *"
@@ -27,6 +28,7 @@ defs = Definitions(
         "duckdb_io": DuckDBPandasIOManager(
             database="database.duckdb",
             schema="public",
-        )
+        ),
+        "dbt": dbt_resource,
     }
 )

@@ -13,15 +13,19 @@ setup(
         "python-dotenv",
         "boto3",
         "pandas",
+        "psycopg2==2.9.9",
         "psycopg2-binary==2.9.9",
         "matplotlib",
         "textblob",
         "tweepy",
         "wordcloud",
 
-        "dagster-duckdb==0.21.13",
-        "dagster-duckdb-pandas==0.21.13",
+        "dagster-duckdb==0.21.14",
+        "dagster-duckdb-pandas==0.21.14",
         "duckdb==0.9.2",
+
+        "dagster-dbt",
+        "dbt-duckdb",
     ],
     extras_require={
         "dev": [

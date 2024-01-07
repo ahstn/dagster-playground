@@ -11,3 +11,7 @@ sources:
       - name: film
       - name: category
       - name: film_category
+      - name: customer
+      - name: rental
+      - name: inventory
+      - name: staff
