@@ -1,5 +1,9 @@
 # Dagster Playground
 
+## Setup
+
+Assuming you have Python installed, run the following to install dependencies and start Dagster:
+
 ```bash
 # Optional virtual environment setup
 python3 -m venv .venv
@@ -9,12 +13,45 @@ pip install -e ".[dev]"
 dagster dev
 ```
 
+## Dagster Project
+
+Our Dagster project lives in [`quickstart_etl/`], which is read during `dagster dev`. The entry point is [`quickstart_etl/__init__.py`] which contains all high-level defintions.
+
+Each file in here has comments intended to help understand the file and its contents purpose.
+
+### Assets
+
+> For more infomation see: [Software Defined Assets | GitHub]
+
+In Dagster assets are descriptions of individual pieces of data, how to create/source them and any metadata (dependencies, refresh policies).
+
+In [`quickstart_etl/assets/`] there are two different domains with differing load sources. `pagila` is fetched from our PostgreSQL database, and uses DBT to refine the models, while `iris` is a sourced from a Dagster example CSV dataset.
+
+As you'll notice from these, assets can be a single file, or organised into their own module.
+
+### Resources
+
+The Parquet and Snowflake resources are cloned from the Dagster example project: [project_fully_featured | GitHub]
+
+
+## Docker Compose
+
+`TODO`
+
 ## References
 - [Creating a new Dagster Project | Dagster](https://docs.dagster.io/getting-started/create-new-project)
 - [The fancy data stack - batch version | Medium](https://www.blef.fr/the-fancy-data-stack/)
 - [A portable data stack with Dagster, Docker, DuckDB, dbt and Superset | Medium](https://medium.com/data-engineers-notes/a-portable-data-stack-with-dagster-docker-duckdb-dbt-and-superset-f5ce42c1012)
 - [dagster-project-example | GitHub](https://github.com/AntonFriberg/dagster-project-example)
 - [practical-data-engineering | GitHub](https://github.com/sspaeti-com/practical-data-engineering)
+
+[`quickstart_etl/`]: ./quickstart_etl/
+[`quickstart_etl/assets/`]: ./quickstart_etl/assets.py
+[`quickstart_etl/__init__.py`]: ./quickstart_etl/__init__.py
+
+[project_fully_featured | GitHub]: https://github.com/dagster-io/dagster/tree/master/examples/project_fully_featured
+[Software Defined Assets | Dagster]: https://docs.dagster.io/concepts/assets/software-defined-assets
+
 
 ---
 
