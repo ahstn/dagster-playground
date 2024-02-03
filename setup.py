@@ -8,8 +8,7 @@ setup(
     python_requires=">=3.10",
     packages=find_packages(exclude=["quickstart_etl_tests"]),
     install_requires=[
-        "dagster",
-        "dagster-cloud",
+        "dagster>=1.6.3",
         "python-dotenv",
         "boto3",
         "pandas",
@@ -20,12 +19,12 @@ setup(
         "tweepy",
         "wordcloud",
 
-        "dagster-duckdb==0.21.14",
-        "dagster-duckdb-pandas==0.21.14",
+        "dagster-duckdb>=0.21.14",
+        "dagster-duckdb-pandas>=0.21.14",
         "duckdb==0.9.2",
 
-        "dagster-dbt",
-        "dbt-duckdb",
+        "dagster-dbt>=0.22.3",
+        "dbt-duckdb>=1.7.1",
     ],
     extras_require={
         "dev": [
