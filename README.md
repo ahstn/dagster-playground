@@ -27,7 +27,7 @@ In Dagster assets are descriptions of individual pieces of data, how to create/s
 
 In [`quickstart_etl/assets/`] there are two different domains with differing load sources. `pagila` is fetched from our PostgreSQL database, and uses DBT to refine the models, while `iris` is a sourced from a Dagster example CSV dataset.
 
-As you'll notice from these, assets can be a single file, or organised into their own module.
+As you'll notice from these, assets can be a single file, or organised into their own module - See [Python Practices] for more info.
 
 ### Resources
 
@@ -38,20 +38,53 @@ The Parquet and Snowflake resources are cloned from the Dagster example project:
 
 `TODO`
 
+### Trino
+
+```sh
+docker compose exec -it trino trino
+```
+
+### Metabase
+
+Metabase is a BI / Analytics platform for Data with a built-in query runner and various data visualisations.
+
+We use a custom Dockerfile due to [Error loading shared library with DuckDB driver | GitHub], for more info see [`docker/metabase/Dockerfile`]: ./docker/metabase/Dockerfile.
+
+On start-up the DuckDB file should be available under `/duckdb/database.duckdb`, which you can configure in Metabase's UI under [Add Database | localhost:5000].
+
+NB: On first access, Metabase will prompt you for a user, which can be fake data. As the Metabase DB is in a volume, you won't be prompted again.
+
+## Python Practices 
+
+### File & Module Composition
+
+Single files should be preferred to modules, like how [`quickstart_etl/assets/iris_csv.py`] is one file, in comparison to the Pagila Assets module: [`quickstart_etl/assets/pagila`].
+
+When creating modules, `__init__.py` is normally a good starting point for containing everything. However, it can quickly grow, decreasing readability.
+
+To remedy this, we can split `__init__.py` into multiple files, named after their purpose. For example, [`quickstart_etl/assets/pagila`] has a file solely for DBT assets, and one for fetching PostgreSQL data.
+
+
 ## References
 - [Creating a new Dagster Project | Dagster](https://docs.dagster.io/getting-started/create-new-project)
 - [The fancy data stack - batch version | Medium](https://www.blef.fr/the-fancy-data-stack/)
 - [A portable data stack with Dagster, Docker, DuckDB, dbt and Superset | Medium](https://medium.com/data-engineers-notes/a-portable-data-stack-with-dagster-docker-duckdb-dbt-and-superset-f5ce42c1012)
 - [dagster-project-example | GitHub](https://github.com/AntonFriberg/dagster-project-example)
 - [practical-data-engineering | GitHub](https://github.com/sspaeti-com/practical-data-engineering)
+- [DuckDB, Trino and Spark comparison for DBT | Medium]: https://medium.com/datamindedbe/head-to-head-comparison-of-dbt-sql-engines-497d71535881
 
 [`quickstart_etl/`]: ./quickstart_etl/
-[`quickstart_etl/assets/`]: ./quickstart_etl/assets.py
+[`quickstart_etl/assets/`]: ./quickstart_etl/assets/
+[`quickstart_etl/assets/pagila`]: ./quickstart_etl/assets/pagila
+[`quickstart_etl/assets/iris_csv.py`]: ./quickstart_etl/assets/iris_csv.py
 [`quickstart_etl/__init__.py`]: ./quickstart_etl/__init__.py
+[`docker/metabase/Dockerfile`]: ./docker/metabase/Dockerfile
 
 [project_fully_featured | GitHub]: https://github.com/dagster-io/dagster/tree/master/examples/project_fully_featured
 [Software Defined Assets | Dagster]: https://docs.dagster.io/concepts/assets/software-defined-assets
-
+[metabase-duckdb-driver | GitHub]: https://github.com//AlexR2D2/metabase_duckdb_driver
+[Error loading shared library with DuckDB driver | GitHub]: https://github.com/AlexR2D2/metabase_duckdb_driver/issues/3
+[Add Database | localhost:5000]: http://localhost:5000/admin/databases/create
 
 ---
 
