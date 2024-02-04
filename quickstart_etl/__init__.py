@@ -10,6 +10,7 @@ from dagster_duckdb_pandas import DuckDBPandasIOManager
 from .assets import pagila
 from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
+from .resources.trino import TrinoDatabase
 from .assets.pagila.trino import load_trino
 
 pagila_assets = load_assets_from_package_module(
@@ -29,6 +30,7 @@ defs = Definitions(
     jobs=[load_trino],
     resources={
         "psql_conn": PagilaDatabase(),
+        "trino_conn": TrinoDatabase(),
         "duckdb": DuckDBResource(
             database="database.duckdb", 
             schema="public",

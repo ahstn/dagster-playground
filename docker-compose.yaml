@@ -15,13 +15,13 @@ services:
       - ${PWD}/docker/postgresql/:/docker-entrypoint-initdb.d/
 
   trino:
-    image: trinodb/trino:410
+    image: trinodb/trino:438
     hostname: trino_container 
     ports:
       - 8080:8080 
     volumes:
-      - ./trino/catalog:/etc/trino/catalog
-
+      - ${PWD}/docker/trino:/etc/trino/catalog
+  
   # Nessie Catalog Server Using In-Memory Store
   nessie:
     image: projectnessie/nessie:0.67.0

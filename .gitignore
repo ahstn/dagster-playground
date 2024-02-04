@@ -139,3 +139,7 @@ tmp*
 *_dbt/dbt_packages
 *_dbt/target
 *_dbt/.user.yml
+
+
+# Metabase
+docker/metabase/data
