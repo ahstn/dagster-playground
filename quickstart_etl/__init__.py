@@ -4,12 +4,11 @@ from dagster import (
     define_asset_job,
     load_assets_from_package_module,
 )
-
 from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
 
 from .assets import pagila
-from .assets.pagila import (dbt_resource)
+from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
 
 pagila_assets = load_assets_from_package_module(
@@ -36,6 +35,6 @@ defs = Definitions(
             database="database.duckdb",
             schema="public",
         ),
-        "dbt": dbt_resource,
+        "dbt": pagila_dbt,
     }
 )
