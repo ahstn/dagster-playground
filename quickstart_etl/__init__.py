@@ -10,6 +10,7 @@ from dagster_duckdb_pandas import DuckDBPandasIOManager
 from .assets import pagila
 from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
+from .assets.pagila.trino import load_trino
 
 pagila_assets = load_assets_from_package_module(
     pagila,
@@ -25,6 +26,7 @@ daily_refresh_schedule = ScheduleDefinition(
 defs = Definitions(
     assets=[*pagila_assets], 
     schedules=[daily_refresh_schedule],
+    jobs=[load_trino],
     resources={
         "psql_conn": PagilaDatabase(),
         "duckdb": DuckDBResource(

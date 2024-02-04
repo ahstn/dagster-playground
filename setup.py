@@ -28,7 +28,7 @@ setup(
     ],
     extras_require={
         "dev": [
-          "dagster-webserver", 
+          "dagster-webserver>=1.6.3", 
           "pytest", 
           "ruff",
           "pandas-stubs"
