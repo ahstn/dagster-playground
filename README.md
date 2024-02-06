@@ -70,6 +70,10 @@ On start-up the DuckDB file should be available under `/duckdb/database.duckdb`,
 
 NB: On first access, Metabase will prompt you for a user, which can be fake data. As the Metabase DB is in a volume, you won't be prompted again.
 
+### Superset
+
+The Superset setup here is simplied for local testing, for a more adequate and updated setup, check out [apache/superset | GitHub]
+
 ## Python Practices 
 
 ### File & Module Composition
@@ -112,3 +116,4 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 [Why Lakehouse, Why Now? | Dremio]: https://www.dremio.com/blog/why-lakehouse-why-now-what-is-a-data-lakehouse-and-how-to-get-started/
 [Open Source and the Data Lakehouse | Dremio]: https://www.dremio.com/blog/open-source-and-the-data-lakehouse-apache-arrow-apache-iceberg-nessie-and-dremio/
 [Iceberg Connector | Trino]: https://trino.io/docs/current/connector/iceberg.html
+[apache/superset | GitHub]: https://github.com/apache/superset

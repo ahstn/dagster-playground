@@ -1,0 +1,66 @@
+x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest}
+x-superset-depends-on: &superset-depends-on
+  - db
+x-superset-volumes:
+  &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+  - ./docker/superset/scripts:/app/docker
+  - superset_home:/app/superset_home
+
+version: "3.7"
+services:
+  db:
+    env_file: superset/.env
+    image: postgres:15
+    container_name: superset_db
+    restart: unless-stopped
+    volumes:
+      - db_home:/var/lib/postgresql/data
+      - ./database.duckdb:/app/dbt/database.duckdb
+
+  superset:
+    platform: linux/amd64
+    env_file: superset/.env
+    build: ./superset
+    container_name: superset_app
+    command: /usr/bin/run-server.sh
+    user: "root"
+    restart: unless-stopped
+    ports:
+      - 8088:8088
+    depends_on: *superset-depends-on
+    volumes: *superset-volumes
+
+  superset-init:
+    platform: linux/amd64
+    image: *superset-image
+    container_name: superset_init
+    command: /app/docker/docker-init.sh
+    env_file: superset/.env
+    depends_on: *superset-depends-on
+    user: "root"
+    volumes: *superset-volumes
+    healthcheck:
+      disable: true
+
+  superset-worker:
+    platform: linux/amd64
+    image: *superset-image
+    container_name: superset_worker
+    command: celery --app=superset.tasks.celery_app:app worker -O fair -l INFO
+    env_file: superset/.env
+    restart: unless-stopped
+    depends_on: *superset-depends-on
+    user: "root"
+    volumes: *superset-volumes
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
+        ]
+
+volumes:
+  superset_home:
+    external: false
+  db_home:
+    external: false
