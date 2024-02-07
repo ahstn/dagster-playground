@@ -2,9 +2,11 @@ from dagster import asset
 from dagster_duckdb import DuckDBResource
 import pandas as pd
 
-@asset
-def iris_dataset(duckdb: DuckDBResource) -> None:
-    iris_df = pd.read_csv(
+@asset(
+    io_manager_key="delta",
+)
+def iris_dataset() -> pd.DataFrame:
+    return pd.read_csv(
         "https://docs.dagster.io/assets/iris.csv",
         names=[
             "sepal_length_cm",
@@ -14,12 +16,9 @@ def iris_dataset(duckdb: DuckDBResource) -> None:
             "species",
         ],
     )
-    with duckdb.get_connection() as conn:
-        conn.execute("CREATE TABLE iris_dataset AS SELECT * FROM iris_df")
 
-@asset(deps=[iris_dataset])
-def iris_setosa(duckdb: DuckDBResource) -> None:
-    with duckdb.get_connection() as conn:
-        conn.execute(
-            "CREATE TABLE iris_setosa AS SELECT * FROM iris_dataset WHERE species = 'Iris-setosa'"
-        )
+@asset(
+    io_manager_key="delta",
+)
+def iris_cleaned(iris_dataset: pd.DataFrame) -> pd.DataFrame:
+    return iris_dataset.dropna().drop_duplicates()

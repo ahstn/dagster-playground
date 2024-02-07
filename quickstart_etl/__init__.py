@@ -6,8 +6,12 @@ from dagster import (
 )
 from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
+from dagster_deltalake import LocalConfig
+from dagster_deltalake_pandas import DeltaLakePandasIOManager
+
 
 from .assets import pagila
+from .assets.iris_csv import iris_cleaned, iris_dataset
 from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
 from .resources.trino import TrinoDatabase
@@ -25,7 +29,7 @@ daily_refresh_schedule = ScheduleDefinition(
 )
 
 defs = Definitions(
-    assets=[*pagila_assets], 
+    assets=[*pagila_assets, iris_dataset, iris_cleaned], 
     schedules=[daily_refresh_schedule],
     jobs=[load_trino],
     resources={
@@ -37,6 +41,11 @@ defs = Definitions(
         ),
         "duckdb_io": DuckDBPandasIOManager(
             database="database.duckdb",
+            schema="public",
+        ),
+        "io_manager": DeltaLakePandasIOManager(
+            root_uri="path/to/deltalake",
+            storage_options=LocalConfig(), 
             schema="public",
         ),
         "dbt": pagila_dbt,
