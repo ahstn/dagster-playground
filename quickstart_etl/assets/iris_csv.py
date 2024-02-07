@@ -3,7 +3,7 @@ from dagster_duckdb import DuckDBResource
 import pandas as pd
 
 @asset(
-    io_manager_key="delta",
+    io_manager_key="io_manager",
 )
 def iris_dataset() -> pd.DataFrame:
     return pd.read_csv(
@@ -18,7 +18,7 @@ def iris_dataset() -> pd.DataFrame:
     )
 
 @asset(
-    io_manager_key="delta",
+    io_manager_key="io_manager",
 )
 def iris_cleaned(iris_dataset: pd.DataFrame) -> pd.DataFrame:
     return iris_dataset.dropna().drop_duplicates()
