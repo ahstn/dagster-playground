@@ -6,7 +6,7 @@ from dagster import (
 )
 from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
-from dagster_deltalake import LocalConfig
+from dagster_deltalake import S3Config
 from dagster_deltalake_pandas import DeltaLakePandasIOManager
 
 
@@ -43,9 +43,15 @@ defs = Definitions(
             database="database.duckdb",
             schema="public",
         ),
-        "io_manager": DeltaLakePandasIOManager(
-            root_uri="path/to/deltalake",
-            storage_options=LocalConfig(), 
+        "delta_io": DeltaLakePandasIOManager(
+            root_uri="./output/delta_lake",
+            storage_options=S3Config(
+                bucket="warehouse",
+                access_key_id="admin",
+                region="us-east-1",
+                secret_access_key="password",
+                endpoint="http://localhost:9000"
+            ),
             schema="public",
         ),
         "dbt": pagila_dbt,
