@@ -55,6 +55,10 @@ It's container is purely the querying aspect of our Lakehouse, while storage and
 
 For clarity, querying does include CRUD operations and isn't limited to `SELECT`s.
 
+#### Admin 
+
+Trino is setup with a test user of `test:test123` to test user & password authentication. For info on how this is managed, see [Password file authentication | Trino].
+
 ```
 USE memory.public;
 SELECT * FROM engineers;
@@ -117,3 +121,4 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 [Open Source and the Data Lakehouse | Dremio]: https://www.dremio.com/blog/open-source-and-the-data-lakehouse-apache-arrow-apache-iceberg-nessie-and-dremio/
 [Iceberg Connector | Trino]: https://trino.io/docs/current/connector/iceberg.html
 [apache/superset | GitHub]: https://github.com/apache/superset
+[Password file authentication | Trino]: https://trino.io/docs/current/security/password-file.html
