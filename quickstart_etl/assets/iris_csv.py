@@ -16,8 +16,6 @@ def iris_dataset() -> pd.DataFrame:
             "species",
         ],
     )
-    with duckdb.get_connection() as conn:
-        conn.execute("CREATE TABLE iris_dataset AS SELECT * FROM iris_df")
 
 @asset(
     io_manager_key="trino_io_manager",

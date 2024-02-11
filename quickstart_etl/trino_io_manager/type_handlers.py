@@ -112,7 +112,7 @@ class FilePathTypeHandler(TrinoBaseTypeHandler):
         if len(obj) == 0:
             raise FileNotFoundError("The list of files to load in the table is empty.")
         table_dir = os.path.dirname(obj[0])
-        # fs = context.resources.fsspec.fs
+        
         with context.resources.fsspec.get_fs() as fs:
             arrow_schema = parquet.read_schema(obj[0], filesystem=fs)
             trino_columns = arrow_utils._get_trino_columns_from_arrow_schema(arrow_schema)
@@ -225,7 +225,6 @@ class ArrowTypeHandler(TrinoBaseTypeHandler):
             self, context: OutputContext, table_slice: TableSlice, obj: pyarrow.Table, connection
         ):
         with context.resources.fsspec.get_fs() as fs:
-        # fs = context.resources.fsspec.fs
             tmp_folder = os.path.join(context.resources.fsspec.tmp_folder, f"{table_slice.schema}_{table_slice.table}/")
             staging_path = os.path.join(tmp_folder, f"{table_slice.schema}_{table_slice.table}.parquet")
             fs.makedirs(tmp_folder, exist_ok=True)
@@ -248,7 +247,7 @@ class ArrowTypeHandler(TrinoBaseTypeHandler):
         if table_slice.partition_dimensions and len(context.asset_partition_keys) == 0:
             return pyarrow.Table()
         file_paths = self.file_handler.load_input(context, table_slice, connection)
-        # fs = context.resources.fsspec.fs
+
         with context.resources.fsspec.get_fs() as fs:
             arrow_df = parquet.ParquetDataset(file_paths, filesystem=fs)
         return arrow_df.read()

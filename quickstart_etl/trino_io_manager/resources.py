@@ -95,52 +95,6 @@ class TrinoConnection:
             yield conn
             conn.close()
 
-    @public
-    def execute_query(
-        self,
-        sql: str,
-        parameters: Optional[Mapping[Any, Any]] = {},
-        fetch_results: bool = False,
-    ):
-        """Execute a query in Trino.
-        Args:
-            sql (str): the query to be executed
-            parameters (Optional[Mapping[Any, Any]]): Parameters to be passed to the query. 
-            fetch_results (bool): If True, will return the result of the query. Defaults to False
-        Returns:
-            The result of the query if fetch_results is True, otherwise returns None
-        Examples:
-            .. code-block:: python
-                @op(required_resource_keys={"trino"})
-                def drop_table(context):
-                    context.resources.trino.execute_query(
-                        "DROP TABLE IF EXISTS MY_TABLE"
-                    )
-        """
-        check.str_param(sql, "sql")
-        check.opt_inst_param(parameters, "parameters", (dict))
-        check.bool_param(fetch_results, "fetch_results")
-
-        query_exec = self.get_connection() if self.connector == 'sqlalchemy' else closing(self.get_connection().cursor())
-
-        with query_exec as cursor:
-            if sys.version_info[0] < 3:
-                sql = sql.encode("utf-8")
-            self.log.info("Executing query: " + sql)
-            parameters = dict(parameters) if isinstance(parameters, Mapping) else parameters
-            cursor.execute(sql, parameters)
-            if fetch_results:
-                result = cursor.fetchall()
-                return result
-
-@resource(
-    config_schema=define_trino_config(),
-    description="This resource is for connecting to a Trino Cluster",
-)
-def trino_resource(context):
-    """#FIXME DOCS"""
-    return TrinoConnection(context.resource_config, context.log)
-
 # ---
 
 def _create_fsspec_filesystem(config) -> fsspec.spec.AbstractFileSystem:
@@ -154,7 +108,6 @@ class FsSpec:
     """
     def __init__(self, tmp_path, fsspec_params):
         if "protocol" not in fsspec_params:
-            #default to local filesystem if none provided
             fsspec_params["protocol"] = "file"
         self.protocol = fsspec_params['protocol']
         self.tmp_folder = os.path.join(tmp_path, '_dagster_tmp')

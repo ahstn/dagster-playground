@@ -63,7 +63,8 @@ defs = Definitions(
             "secret": "minio123",
             "endpoint_url": "http://localhost:9000",
         }).configured({
+            # For S3, this is `{bucket}/{optional_path}`
             "tmp_path": "warehouse",
-        })
+        }),
     }
 )
