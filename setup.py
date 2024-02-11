@@ -29,8 +29,10 @@ setup(
         "dagster_deltalake",
         "dagster-deltalake-pandas",
 
-
-        "trino[sqlalchemy]"
+        # Trino IO Manager
+        "trino[sqlalchemy]",
+        "s3fs",
+        "pyarrow",
     ],
     extras_require={
         "dev": [
