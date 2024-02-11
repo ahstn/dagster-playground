@@ -8,6 +8,7 @@ from dagster_duckdb import DuckDBResource
 from dagster_duckdb_pandas import DuckDBPandasIOManager
 
 from .assets import pagila
+from .assets.iris_csv import iris_cleaned, iris_dataset
 from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
 from .resources.trino import TrinoDatabase
@@ -32,7 +33,7 @@ trino_io_manager = build_trino_iomanager([
 ])
 
 defs = Definitions(
-    assets=[*pagila_assets], 
+    assets=[*pagila_assets, iris_cleaned, iris_dataset], 
     schedules=[daily_refresh_schedule],
     jobs=[load_trino],
     resources={
@@ -57,8 +58,12 @@ defs = Definitions(
         }),
         "fsspec": build_fsspec_resource({
             "protocol": "s3",
+            # https://s3fs.readthedocs.io/en/latest/api.html#s3fs.core.S3FileSystem
+            "key": "minio",
+            "secret": "minio123",
+            "endpoint_url": "http://localhost:9000",
         }).configured({
-            "tmp_path": "./output",
+            "tmp_path": "warehouse",
         })
     }
 )

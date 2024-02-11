@@ -231,8 +231,17 @@ class ArrowTypeHandler(TrinoBaseTypeHandler):
             fs.makedirs(tmp_folder, exist_ok=True)
             parquet.write_table(obj, staging_path, filesystem=fs)
             files = fs.ls(staging_path)
-            self.file_handler.handle_output(context, table_slice, 
-                                                [f"{context.resources.fsspec.protocol}://{file}" for file in files], connection)
+
+            try:
+                self.file_handler.handle_output(
+                    context, 
+                    table_slice, 
+                    [f"{context.resources.fsspec.protocol}a://{file}" for file in files], 
+                    connection)
+            except Exception as e:
+                context.log.error(f"Error while loading the parquet files into Trino: {e}")
+                raise e
+
             fs.rm(staging_path, recursive=True)
 
     def load_input(self, context: InputContext, table_slice: TableSlice, connection) -> pyarrow.Table:
