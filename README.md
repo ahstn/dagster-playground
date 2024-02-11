@@ -47,6 +47,10 @@ docker compose exec -it trino trino
 docker compose logs -f metabase
 ```
 
+Respective URLs for UIs:
+- Minio - http://localhost:9001/browser
+- Metabase - http://localhost:5000
+
 ### Trino
 
 Trino is a distributed SQL query engine designed to efficiently query vast amounts of data, usually against flat files like parquet. It is also the query engine behind AWS Athena. 
@@ -54,6 +58,12 @@ Trino is a distributed SQL query engine designed to efficiently query vast amoun
 It's container is purely the querying aspect of our Lakehouse, while storage and table metadata is handled by Minio (Parquet) and Nessie (Iceberg). See [Iceberg Connector | Trino] for more information.
 
 For clarity, querying does include CRUD operations and isn't limited to `SELECT`s.
+
+The `trino_io_manager` Python code is thanks to the work done in [andreapiso/dagster-trino | GitHub].
+
+#### Admin 
+
+Trino is setup with a test user of `test:test123` to test user & password authentication. For info on how this is managed, see [Password file authentication | Trino].
 
 ```
 USE memory.public;
@@ -117,3 +127,5 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 [Open Source and the Data Lakehouse | Dremio]: https://www.dremio.com/blog/open-source-and-the-data-lakehouse-apache-arrow-apache-iceberg-nessie-and-dremio/
 [Iceberg Connector | Trino]: https://trino.io/docs/current/connector/iceberg.html
 [apache/superset | GitHub]: https://github.com/apache/superset
+[Password file authentication | Trino]: https://trino.io/docs/current/security/password-file.html
+[andreapiso/dagster-trino | GitHub]: https://github.com/andreapiso/dagster-trino

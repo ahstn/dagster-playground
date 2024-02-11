@@ -25,6 +25,14 @@ setup(
 
         "dagster-dbt>=0.22.3",
         "dbt-duckdb>=1.7.1",
+
+        "dagster_deltalake",
+        "dagster-deltalake-pandas",
+
+        # Trino IO Manager
+        "trino[sqlalchemy]",
+        "s3fs",
+        "pyarrow",
     ],
     extras_require={
         "dev": [
