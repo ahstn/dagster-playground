@@ -3,6 +3,8 @@ from .configs import define_trino_config
 from contextlib import contextmanager
 
 from trino.exceptions import TrinoQueryError
+from sqlalchemy.sql import text
+from sqlalchemy.exc import ObjectNotExecutableError
 
 from dagster._core.storage.db_io_manager import (
     DbClient,
@@ -80,20 +82,22 @@ class TrinoDbClient(DbClient):
     """
     @staticmethod
     @contextmanager
-    def connect(context, table_slice):
+    def connect(context, table_slice: TableSlice):
         with TrinoConnection(
             context.resource_config,
             context.log
         ).get_connection() as conn:
+            if context.resource_config.get("connector") == "sqlalchemy":
+                yield conn
             yield conn.cursor()
     
     @staticmethod
     def ensure_schema_exists(context: OutputContext, table_slice: TableSlice, connection) -> None:
         bucket = context.resource_config["bucket"]
         context.log.info(f"Creating schema {table_slice.schema} if it doesn't exist. Location = s3a://{bucket}")
-        connection.execute(f"""
+        connection.execute(text(f"""
             CREATE SCHEMA IF NOT EXISTS {table_slice.schema} WITH (LOCATION = 's3a://{bucket}/')
-        """)
+        """))
 
     @staticmethod
     def get_select_statement(table_slice: TableSlice) -> str:
@@ -109,8 +113,8 @@ class TrinoDbClient(DbClient):
     def delete_table_slice(context: OutputContext, table_slice: TableSlice, connection) -> None:
         try:
             connection.execute(_get_cleanup_statement(table_slice))
-        except TrinoQueryError:
-            # table doesn't exist yet, so ignore the error
+        except (TrinoQueryError, ObjectNotExecutableError):
+            context.log.info(f"Table {table_slice.schema}.{table_slice.table} doesn't exist, continuing...")
             pass
 
 def _get_cleanup_statement(table_slice: TableSlice) -> str:

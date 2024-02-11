@@ -50,12 +50,6 @@ class ArrowTypeHandler(TrinoBaseTypeHandler):
         if len(obj) == 0:
             raise FileNotFoundError("The list of files to load in the table is empty.")
 
-        with context.resources.fsspec.get_fs() as fs:
-            arrow_schema = parquet.read_schema(obj[0], filesystem=fs)
-            trino_columns = arrow_utils._get_trino_columns_from_arrow_schema(arrow_schema)
-        context.log.info(arrow_schema)
-        context.log.info(trino_columns)
-        tmp_table_name = f'{table_slice.schema}.tmp_dagster_{table_slice.table}'
         drop_query = f'''
             DROP TABLE IF EXISTS {tmp_table_name}
         '''

@@ -11,7 +11,7 @@ from ..io_manager import TrinoDbClient
 from ..types import TableFilePaths, TrinoQuery
 from .base import TrinoBaseTypeHandler
 from .arrows import ArrowTypeHandler
-
+from ..resources import TrinoConnection
 
 class PandasTypeHandler(TrinoBaseTypeHandler):
     """Stores and loads Pandas DataFrames in Trino accessing the underlying parquet files
@@ -51,21 +51,19 @@ class PandasTypeHandler(TrinoBaseTypeHandler):
         """Loads content of files saved at the given location into a Trino managed table."""
         if len(obj) == 0:
             raise FileNotFoundError("The list of files to load in the table is empty.")
+        
 
         try:
+            engine = TrinoConnection(context.resource_config, context.log).get_engine()
+            # TODO: This breaks because `table_name` or schema will be wrapped in quotes
+            table_name = _catalog_schema_table(context, table_slice)
             obj.to_sql(
-                f"{table_slice.schema}.{table_slice.table}",
-                con=connection.cursor(),
+                table_slice.table,
+                con=engine,
+                schema="{0}.{1}".format('hive', table_slice.schema),
                 if_exists="append",
                 index=False
             )
-            # connection.execute(
-            #     f'''
-            #     CREATE TABLE {table_slice.schema}.{table_slice.table}
-            #     WITH (format = 'PARQUET') 
-            #     AS (SELECT * FROM obj)
-            #     '''
-            # )
         except TrinoQueryError as e:
             if e.error_name != 'TABLE_ALREADY_EXISTS':
                 raise e
@@ -93,3 +91,6 @@ class PandasTypeHandler(TrinoBaseTypeHandler):
     @property
     def requires_fsspec(self):
         return False
+    
+def _catalog_schema_table(context, table_slice: TableSlice) -> str:
+    return f"{context.resource_config.get('catalog')}.{table_slice.schema}.{table_slice.table}"
