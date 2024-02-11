@@ -51,7 +51,7 @@ services:
   
   # Nessie Catalog Server Using In-Memory Store
   nessie:
-    image: projectnessie/nessie:0.67.0
+    image: ghcr.io/projectnessie/nessie:0.76.5
     ports:
       - 19120:19120
 
