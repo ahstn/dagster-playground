@@ -1,5 +1,22 @@
 # Dagster Playground
 
+** Table of Contents **
+
+- [⚙ Setup](#setup)
+- [Dagster Project](#dagster-project)
+- [Docker Compose](#docker-compose)
+  - [Trino](#trino)
+  - [Metabase](#metabase)
+  - [Apache SuperSet](#superset)
+  - Nessie `TODO`
+- [Python Practices](#python-practices)
+  - [File & Module Composition](#file--module-composition)
+- [References](#references)
+
+
+![overview](./docs/tooling-overview.svg)
+
+
 ## Setup
 
 Assuming you have Python installed, run the following to install dependencies and start Dagster:
@@ -46,6 +63,8 @@ docker compose exec -it trino trino
 # Tail Metabase logs
 docker compose logs -f metabase
 ```
+
+This can also be used to bring up individual containers. For example to just run Trino (and it's dependencies - like Minio) run the following: `docker compose up trino`. This can be useful when making configuration changes and wanting to see quick feedback.
 
 Respective URLs for UIs:
 - Minio - http://localhost:9001/browser
