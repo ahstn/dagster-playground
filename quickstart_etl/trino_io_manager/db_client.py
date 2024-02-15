@@ -26,8 +26,12 @@ class TrinoDbClient(DbClient):
     
     @staticmethod
     def ensure_schema_exists(context: OutputContext, table_slice: TableSlice, connection) -> None:
-        # This might need `WITH (location = 's3://bucket/path')`
-        query =f'create schema if not exists {table_slice.schema}'
+        """
+        Validate the schema exists, if not create it.
+        For Iceberg, this includes specifying the remote fs location ahead of time.
+        """
+        bucket = context.resource_config['bucket']
+        query = f"CREATE SCHEMA IF NOT EXISTS {table_slice.schema} WITH (LOCATION = 's3a://{bucket}/{table_slice.schema}')"
         connection.execute(query)
 
     @staticmethod

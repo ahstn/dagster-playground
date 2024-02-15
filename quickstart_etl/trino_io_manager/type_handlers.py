@@ -3,6 +3,8 @@ from dagster import InputContext, OutputContext
 from .io_manager import TrinoDbClient
 from .types import TableFilePaths, TrinoQuery
 
+from typing import List
+
 from trino.exceptions import TrinoQueryError
 
 import pandas as pd
@@ -20,59 +22,6 @@ class TrinoBaseTypeHandler(DbTypeHandler):
     @property
     def requires_fsspec(self):
         False
-
-class TrinoQueryTypeHandler(TrinoBaseTypeHandler):
-    """Execute or returns Trino Queries to create and 
-    modify Dagster Trino assets.
-
-    Example:
-        .. code-block:: python
-            from dagster_trino.io_manager import build_trino_io_manager
-            from dagster_trino.type_handlers import TrinoQueryTypeHandler
-            from dagster import Definitions
-            
-            @asset(io_manager_key='trino_io_manager')
-            def my_table() 
-                return 'SELECT * FROM my_trino_table' LIMIT 10
-            trino_io_manager = build_trino_io_manager([TrinoQueryTypeHandler()])
-            
-            defs = Definitions(
-                assets=[my_table],
-                resources={
-                    "trino_io_manager": trinoquery_io_manager.configured({...}),
-                }
-            )
-    """
-    def handle_output(
-        self, context: OutputContext, table_slice: TableSlice, obj: TrinoQuery, connection
-    ):
-        """Stores the Trino Query in a Table."""
-        try:
-            connection.execute(
-                f"create table {table_slice.schema}.{table_slice.table} as {obj}"
-            )
-        except TrinoQueryError as e:
-            if e.error_name != 'TABLE_ALREADY_EXISTS':
-                raise e
-            # table was not created, therefore already exists. Insert the data
-            connection.execute(
-                f"insert into {table_slice.schema}.{table_slice.table} {obj}"
-            )
-        context.add_output_metadata(
-            {
-                "create_statement": obj
-            }
-        )
-
-    def load_input(
-        self, context: InputContext, table_slice: TableSlice, connection
-    ) -> TrinoQuery:
-        """Loads the input as a Trino Query"""
-        return TrinoDbClient.get_select_statement(table_slice)
-    
-    @property
-    def supported_types(self):
-        return [TrinoQuery]
     
 class FilePathTypeHandler(TrinoBaseTypeHandler):
     """Stores and loads Parquet Data in Trino 
@@ -128,7 +77,7 @@ class FilePathTypeHandler(TrinoBaseTypeHandler):
             )
             WITH (
                 format = 'PARQUET',
-                external_location = '{table_dir}'
+                location = '{table_dir}'
             )
         '''
         select_query = f'''
@@ -188,60 +137,71 @@ class FilePathTypeHandler(TrinoBaseTypeHandler):
         return True
     
 class ArrowTypeHandler(TrinoBaseTypeHandler):
-    """Stores and loads Arrow Tables in Trino accessing the underlying parquet files
-    through the object storage or file system backing a Trino Hive catalog.
-    To use this type handler, pass it to ``build_trino_io_manager``.
-
-    The `ArrowTypeHandler` requires an `fsspec` resource to be set up 
-    in order to access the storage layer. 
-
-    Example:
-        .. code-block:: python
-            from dagster_trino.io_manager import build_trino_io_manager
-            from dagster_trino.resources import build_fsspec_resource
-            from dagster_trino.type_handlers import ArrowTypeHandler
-            from dagster import Definitions
-            import pyarrow as pa
-            
-            @asset(io_manager_key='trino_io_manager')
-            def my_table() -> pa.Table
-                ...
-            fsspec_params = {...} #dict containing fsspec storage options
-            fsspec_resource = dagster_trino.resources.build_fsspec_resource(fsspec_params)
-            trino_io_manager = build_trino_io_manager([ArrowTypeHandler()])
-            
-            defs = Definitions(
-                assets=[my_table],
-                resources={
-                    "trino_io_manager": trinoquery_io_manager.configured({...}),
-                    "fsspec": fsspec_resource.configured({...})
-                }
-            )
-    """
     def __init__(self):
         self.file_handler = FilePathTypeHandler()
 
-    def handle_output(
-            self, context: OutputContext, table_slice: TableSlice, obj: pyarrow.Table, connection
-        ):
+
+    def upload_files(self, context: OutputContext, table_slice: TableSlice, obj: pyarrow.Table) -> str:
+        """
+        Using fsspec, upload the parquet files to the storage layer
+        """
         with context.resources.fsspec.get_fs() as fs:
-            tmp_folder = os.path.join(context.resources.fsspec.tmp_folder, f"{table_slice.schema}_{table_slice.table}/")
-            staging_path = os.path.join(tmp_folder, f"{table_slice.schema}_{table_slice.table}.parquet")
-            fs.makedirs(tmp_folder, exist_ok=True)
-            parquet.write_table(obj, staging_path, filesystem=fs)
-            files = fs.ls(staging_path)
+            file_path = os.path.join(
+                context.resources.fsspec.tmp_folder, 
+                f"{table_slice.schema}_{table_slice.table}/"
+                f"{table_slice.schema}_{table_slice.table}.parquet")
+            fs.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-            try:
-                self.file_handler.handle_output(
-                    context, 
-                    table_slice, 
-                    [f"{context.resources.fsspec.protocol}a://{file}" for file in files], 
-                    connection)
-            except Exception as e:
-                context.log.error(f"Error while loading the parquet files into Trino: {e}")
-                raise e
+            parquet.write_table(obj, file_path, filesystem=fs)
+            # TODO: Delete files after
 
-            fs.rm(staging_path, recursive=True)
+            return os.path.dirname(file_path)
+        
+
+    def create_table(self, context: OutputContext, table_slice: TableSlice, table_dir: str, obj: pyarrow.table, connection):
+        """
+        Create a table in Trino using the schema of the Arrow Table.
+        NB: Sometimes a temporary table is necessary to load data into the destination (if pd can't produce trino SQL values)
+        """
+        arrow_schema = obj.schema
+        trino_columns = arrow_utils._get_trino_columns_from_arrow_schema(arrow_schema)
+        table = f'{table_slice.schema}.{table_slice.table}'
+        context.log.info(arrow_schema)
+        context.log.info(trino_columns)
+        
+        drop_query = f'DROP TABLE IF EXISTS {table}'
+        create_query = f'''
+            CREATE TABLE {table}(
+                {trino_columns}
+            )
+            WITH (
+                format = 'PARQUET',
+                external_location = 's3a://{table_dir}'
+            )
+        '''
+        connection.execute(drop_query)
+        connection.execute(create_query)
+
+        context.add_output_metadata({
+            "table_directory": table_dir,
+            "create_query": create_query,
+            "table": table
+        })
+
+    # def handle_output(self, context: OutputContext, table_slice: TableSlice, obj: Union[pd.DataFrame, pyarrow.Table], connection):
+    #     print("Handling output")
+
+    #     if isinstance(obj, PandasDataFrame):
+    #         print("Handling output PD dataframe")
+
+    def handle_output(self, context: OutputContext, table_slice: TableSlice, obj: pyarrow.Table, connection):
+        table_dir = self.upload_files(context, table_slice, obj)
+    
+        try:
+            self.create_table(context, table_slice, table_dir, obj, connection)
+        except Exception as e:
+            context.log.error(f"Error while loading the parquet files into Trino: {e}")
+            raise e
 
     def load_input(self, context: InputContext, table_slice: TableSlice, connection) -> pyarrow.Table:
         if table_slice.partition_dimensions and len(context.asset_partition_keys) == 0:

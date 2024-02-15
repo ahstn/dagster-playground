@@ -50,11 +50,12 @@ defs = Definitions(
         "dbt": pagila_dbt,
         "trino_io_manager": trino_io_manager.configured({
             "catalog": "hive",
-            "schema": "public",
+            "schema": "test",
             "user": "trino",
             "host": "localhost",
             "port": 8080,
             "connector": "trino",
+            "bucket": "warehouse",
         }),
         "fsspec": build_fsspec_resource({
             "protocol": "s3",
