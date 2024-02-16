@@ -1,3 +1,13 @@
+# Trino & Hive Metastore
+
+As I understand it, Hive Metastore used to be tightly coupled with the general Hive & Hadoop stack. 
+
+Around 2012-2015, a gradual de-coupling occured making it less reliant on HFDS and Hadoop components. This came with a shift to using [Apache Thrift] as communication protocol and supporting more backing stores
+
+While already successful as a "catalog" store for table metadata and data locations, this shift helped adoptions for emerging table formats.
+
+## Integration
+
 In `./docker/trino/catalog` we have a `hive.properties` file. The name of this is arbitrary, but it becomes the Trino Catalog name.
 
 ```properties
@@ -33,3 +43,5 @@ If no errors are returned, you'll see the new schema and tables in your DB IDE o
 USE hive.raw;
 SHOW TABLES;
 ```
+
+[Apache Thift]: https://en.wikipedia.org/wiki/Apache_Thrift
