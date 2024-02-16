@@ -50,11 +50,17 @@ class TrinoDbClient(DbClient):
     @staticmethod
     @contextmanager
     def connect(context, table_slice):
+        # engine = create_engine(URL(**context.resource_config))
+        # conn = engine.connect()
+        # yield conn
+        # conn.close()
+        # engine.dispose()
+
         with TrinoConnection(
             context.resource_config,
             context.log
         ).get_connection() as conn:
-            yield conn.cursor()
+            yield conn
     
     @staticmethod
     def ensure_schema_exists(context: OutputContext, table_slice: TableSlice, connection) -> None:
