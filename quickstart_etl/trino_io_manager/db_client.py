@@ -3,12 +3,44 @@ from dagster import OutputContext
 from dagster._core.definitions.time_window_partitions import TimeWindow
 from dagster._core.storage.db_io_manager import DbClient, TablePartitionDimension, TableSlice
 from trino.exceptions import TrinoQueryError
-from typing import Sequence, cast
 
-from .resources import TrinoConnection
+from dagster._annotations import public
+from typing import Mapping, Iterator, Sequence, cast
+from trino.sqlalchemy import URL
+from sqlalchemy import create_engine, Connection
+
 
 TRINO_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S" #TODO: check correctness
 
+class TrinoConnection:
+    """
+    A connection to Trino that can execute queries. In general this class should not be
+    directly instantiated, but rather used as a resource in an op or asset.
+    """
+    def __init__(self, config: Mapping[str, str], log):     
+        self.conn_args = {
+            k: config.get(k)
+            for k in (
+                "host",
+                "user",
+                "port",
+                "catalog",
+                "schema"
+            )
+            if config.get(k) is not None
+        }
+        self.log = log
+
+    @public
+    @contextmanager
+    def get_connection(self) -> Iterator[Connection]:
+        """Gets a connection to Trino as a context manager."""
+        engine = create_engine(URL(**self.conn_args))
+        conn = engine.connect()
+
+        yield conn
+        conn.close()
+        engine.dispose()
 
 class TrinoDbClient(DbClient):
     """

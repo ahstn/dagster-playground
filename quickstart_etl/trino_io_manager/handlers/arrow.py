@@ -1,8 +1,3 @@
-from typing import List
-
-TrinoQuery = str
-TableFilePaths = List[str]
-
 trino_string = "VARCHAR"
 trino_bool = "BOOLEAN"
 trino_tinyint = "TINYINT"
@@ -26,3 +21,19 @@ arrow_double = "double"
 arrow_decimal = "decimal128"
 arrow_date = "date32[day]"
 arrow_time = "timestamp[ns]"
+
+map_arrow_trino_types = {
+    arrow_string:   trino_string,
+    arrow_bool:     trino_bool,
+    arrow_tinyint:  trino_tinyint,
+    arrow_smallint: trino_smallint,
+    arrow_int:      trino_int,
+    arrow_bigint:   trino_bigint,
+    arrow_float:    trino_float,
+    arrow_double:   trino_double,
+    arrow_decimal:  trino_decimal,
+    arrow_date:     trino_date,
+    arrow_time:     trino_time
+}
+
+    

@@ -1,7 +1,6 @@
-from .io_manager import build_trino_iomanager
+from .io_manager import build_trino_io_manager
 
 
 __all__ = [
-    "trino_resource",
-    "build_trino_iomanager",
+    "build_trino_io_manager",
 ]
