@@ -2,45 +2,15 @@ from contextlib import contextmanager
 from dagster import OutputContext
 from dagster._core.definitions.time_window_partitions import TimeWindow
 from dagster._core.storage.db_io_manager import DbClient, TablePartitionDimension, TableSlice
-from trino.exceptions import TrinoQueryError
+from trino.exceptions import TrinoQueryError, TrinoUserError
 
-from dagster._annotations import public
-from typing import Mapping, Iterator, Sequence, cast
+from typing import Sequence, cast
 from trino.sqlalchemy import URL
-from sqlalchemy import create_engine, Connection
+from sqlalchemy import create_engine, Connection, text
+from sqlalchemy.exc import SQLAlchemyError
 
 
 TRINO_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S" #TODO: check correctness
-
-class TrinoConnection:
-    """
-    A connection to Trino that can execute queries. In general this class should not be
-    directly instantiated, but rather used as a resource in an op or asset.
-    """
-    def __init__(self, config: Mapping[str, str], log):     
-        self.conn_args = {
-            k: config.get(k)
-            for k in (
-                "host",
-                "user",
-                "port",
-                "catalog",
-                "schema"
-            )
-            if config.get(k) is not None
-        }
-        self.log = log
-
-    @public
-    @contextmanager
-    def get_connection(self) -> Iterator[Connection]:
-        """Gets a connection to Trino as a context manager."""
-        engine = create_engine(URL(**self.conn_args))
-        conn = engine.connect()
-
-        yield conn
-        conn.close()
-        engine.dispose()
 
 class TrinoDbClient(DbClient):
     """
@@ -50,27 +20,30 @@ class TrinoDbClient(DbClient):
     @staticmethod
     @contextmanager
     def connect(context, table_slice):
-        # engine = create_engine(URL(**context.resource_config))
-        # conn = engine.connect()
-        # yield conn
-        # conn.close()
-        # engine.dispose()
-
-        with TrinoConnection(
-            context.resource_config,
-            context.log
-        ).get_connection() as conn:
-            yield conn
+        engine = create_engine(
+            URL(
+                catalog=context.resource_config.get("catalog"),
+                schema=context.resource_config.get("schema"),
+                user=context.resource_config.get("user"),
+                host=context.resource_config.get("host"),
+                port=context.resource_config.get("port"),
+            )
+        )
+        conn = engine.connect()
+        yield conn
+        conn.close()
+        engine.dispose()
     
     @staticmethod
-    def ensure_schema_exists(context: OutputContext, table_slice: TableSlice, connection) -> None:
+    def ensure_schema_exists(context: OutputContext, table_slice: TableSlice, connection: Connection) -> None:
         """
         Validate the schema exists, if not create it.
         For Iceberg, this includes specifying the remote fs location ahead of time.
         """
-        bucket = context.resource_config['bucket']
-        query = f"CREATE SCHEMA IF NOT EXISTS {table_slice.schema} WITH (LOCATION = 's3a://{bucket}/{table_slice.schema}')"
-        connection.execute(query)
+        bucket = context.resource_config.get('bucket')
+        connection.execute(text(
+            f"CREATE SCHEMA IF NOT EXISTS {table_slice.schema} WITH (LOCATION = 's3a://{bucket}/{table_slice.schema}')"
+        ))
 
     @staticmethod
     def get_select_statement(table_slice: TableSlice) -> str:
@@ -84,11 +57,18 @@ class TrinoDbClient(DbClient):
         
     @staticmethod
     def delete_table_slice(context: OutputContext, table_slice: TableSlice, connection) -> None:
+        """
+        Truncate table if it exists, if not ignore exceptions
+        """
         try:
-            connection.execute(_get_cleanup_statement(table_slice))
-        except TrinoQueryError:
-            # table doesn't exist yet, so ignore the error
-            pass
+            connection.execute(text(_get_cleanup_statement(table_slice)))
+        except TrinoUserError as e:
+            if e.error_name == 'TABLE_NOT_FOUND': 
+                pass
+        except SQLAlchemyError as e:
+            if "TABLE_NOT_FOUND" in e._message():
+                pass
+
 
 def _get_cleanup_statement(table_slice: TableSlice) -> str:
     """

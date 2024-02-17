@@ -9,6 +9,7 @@ setup(
     packages=find_packages(exclude=["quickstart_etl_tests"]),
     install_requires=[
         "dagster>=1.6.3",
+        "dagster-graphql>=1.6.3",
         "python-dotenv",
         "boto3",
         "pandas",
@@ -36,7 +37,7 @@ setup(
     ],
     extras_require={
         "dev": [
-          "dagster-webserver>=1.6.3", 
+          "dagster-webserver", 
           "pytest", 
           "ruff",
           "pandas-stubs"

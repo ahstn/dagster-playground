@@ -31,7 +31,8 @@ class ParquetTypeHandler(DbTypeHandler):
         """
         Map column types [pandas || pyarrow] -> [trino] using arrows
         """
-        schema = Schema.from_pandas(obj[0]) if isinstance(obj, pd.DataFrame) else obj.schema    
+        
+        schema = Schema.from_pandas(obj) #if isinstance(obj, pd.DataFrame) else obj.schema    
         map_arrow_trino_types = {"string": "VARCHAR", "double": "DOUBLE"}
 
         return ", ".join([
@@ -39,15 +40,19 @@ class ParquetTypeHandler(DbTypeHandler):
             for column, dtype in zip(schema.names, schema.types)
         ])
 
-    def handle_output(self, context: OutputContext, table_slice: TableSlice, obj: pd.DataFrame, connection):
-        table_dir = self.upload_files(context, table_slice, obj)
+    def handle_output(self, context: OutputContext, ts: TableSlice, obj: pd.DataFrame, connection):
+        context.log.info(f"No data to load into Trino, {obj} is empty")
+        if len(obj) == 0:
+            raise ValueError("No data to load into Trino")
+        table_dir = self.upload_files(context, ts, obj)
+        context.log.info(f"No data to load into Trino, {obj} is empty")
         columns = self.build_columns_string(obj)
     
         try:
             with connection as conn:
-                conn.execute(text("DROP TABLE IF EXISTS public.iris"))
+                conn.execute(text(f"DROP TABLE IF EXISTS {ts.schema}.{ts.table}"))
                 conn.execute(text(f"""
-                    CREATE TABLE public.iris ( {columns} )
+                    CREATE TABLE {ts.schema}.{ts.table} ( {columns} )
                     WITH (
                         format = 'PARQUET', 
                         external_location = '{table_dir}'
