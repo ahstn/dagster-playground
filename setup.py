@@ -19,28 +19,17 @@ setup(
         "textblob",
         "tweepy",
         "wordcloud",
-
         "dagster-duckdb>=0.21.14",
         "dagster-duckdb-pandas>=0.21.14",
         "duckdb==0.9.2",
-
         "dagster-dbt>=0.22.3",
         "dbt-duckdb>=1.7.1",
-
         "dagster_deltalake",
         "dagster-deltalake-pandas",
-
         # Trino IO Manager
         "trino[sqlalchemy]",
         "s3fs",
         "pyarrow",
     ],
-    extras_require={
-        "dev": [
-          "dagster-webserver", 
-          "pytest", 
-          "ruff",
-          "pandas-stubs"
-        ]
-    },
+    extras_require={"dev": ["dagster-webserver", "pytest", "ruff>=0.2.1", "pandas-stubs"]},
 )

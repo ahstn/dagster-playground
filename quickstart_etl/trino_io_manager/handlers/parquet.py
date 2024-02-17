@@ -66,11 +66,12 @@ class ParquetTypeHandler(DbTypeHandler):
     def load_input(self, context: InputContext, table_slice: TableSlice, connection) -> pa.Table:
         if table_slice.partition_dimensions and len(context.asset_partition_keys) == 0:
             return pa.Table()
-        file_paths = self.file_handler.load_input(context, table_slice, connection)
+        col_str = ", ".join(table_slice.columns) if table_slice.columns else "*"
 
-        with context.resources.fsspec.get_fs() as fs:
-            arrow_df = parquet.ParquetDataset(file_paths, filesystem=fs)
-        return arrow_df.read()
+        return pd.read_sql(
+            f"""SELECT {col_str} FROM {table_slice.schema}.{table_slice.table}""",
+            connection
+        )
     
     @property
     def supported_types(self):

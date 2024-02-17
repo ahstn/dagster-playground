@@ -22,11 +22,7 @@ class TrinoDbClient(DbClient):
     def connect(context, table_slice):
         engine = create_engine(
             URL(
-                catalog=context.resource_config.get("catalog"),
-                schema=context.resource_config.get("schema"),
-                user=context.resource_config.get("user"),
-                host=context.resource_config.get("host"),
-                port=context.resource_config.get("port"),
+                **context.resource_config.get('connection_config')
             )
         )
         conn = engine.connect()
