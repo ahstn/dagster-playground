@@ -8,6 +8,8 @@ from sqlalchemy import text
 from typing import Union
 from fsspec import filesystem
 
+from .data_type_mapping import map_arrow_trino_types
+
     
 class ParquetTypeHandler(DbTypeHandler):
     def upload_files(self, context: OutputContext, table_slice: TableSlice, obj: Union[pd.DataFrame, pa.Table]) -> str:
@@ -34,9 +36,6 @@ class ParquetTypeHandler(DbTypeHandler):
         """
         
         schema = Schema.from_pandas(obj) if isinstance(obj, pd.DataFrame) else obj.schema    
-        # TODO: Add more types - ./arrow.py
-        map_arrow_trino_types = {"string": "VARCHAR", "double": "DOUBLE"}
-
         return ", ".join([
             f"{column} {map_arrow_trino_types[str(dtype)]}" 
             for column, dtype in zip(schema.names, schema.types)
