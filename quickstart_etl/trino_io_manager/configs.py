@@ -52,6 +52,12 @@ def define_trino_config():
         is_required=False
     )
 
+    bucket = Field(
+        StringSource,
+        description='Bucket to use for Iceberg table storage',
+        is_required=True
+    )
+
     return {
         "host": host,
         "user": user,
@@ -60,5 +66,6 @@ def define_trino_config():
         "http_scheme": http_scheme,
         "schema": schema,
         "catalog": catalog,
-        "connector": connector
+        "connector": connector,
+        "bucket": bucket
     }

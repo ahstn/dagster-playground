@@ -78,8 +78,6 @@ It's container is purely the querying aspect of our Lakehouse, while storage and
 
 For clarity, querying does include CRUD operations and isn't limited to `SELECT`s.
 
-The `trino_io_manager` Python code is thanks to the work done in [andreapiso/dagster-trino | GitHub].
-
 #### Admin 
 
 Trino is setup with a test user of `test:test123` to test user & password authentication. For info on how this is managed, see [Password file authentication | Trino].
