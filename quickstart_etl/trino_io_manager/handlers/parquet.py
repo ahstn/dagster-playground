@@ -6,6 +6,7 @@ from dagster._core.storage.db_io_manager import DbTypeHandler, TableSlice
 from pyarrow import parquet, Schema
 from sqlalchemy import text
 from typing import Union
+from fsspec import filesystem
 
     
 class ParquetTypeHandler(DbTypeHandler):
@@ -14,25 +15,26 @@ class ParquetTypeHandler(DbTypeHandler):
         Using fsspec, upload the parquet files to the storage layer
         """
         file_path = os.path.join(
-            f"s3a://{context.resources.fsspec.tmp_folder}", 
-            table_slice.schema,
+            f"s3a://{context.resource_config.get('bucket')}", 
+            table_slice.schema, 
             f"{table_slice.table}.parquet"
         )
         if isinstance(obj, pd.DataFrame):
             obj = pa.Table.from_pandas(obj)
             
-        with context.resources.fsspec.get_fs() as fs:
-            fs.makedirs(os.path.dirname(file_path), exist_ok=True)
+        fs = filesystem(**context.resource_config.get("fs_config"))
+        fs.makedirs(os.path.dirname(file_path), exist_ok=True)
+        parquet.write_table(obj, file_path, filesystem=fs)
 
-            parquet.write_table(obj, file_path, filesystem=fs)
-            return os.path.dirname(file_path)
+        return os.path.dirname(file_path)
         
     def build_columns_string(self, obj: Union[pd.DataFrame, pa.Table]) -> str:
         """
         Map column types [pandas || pyarrow] -> [trino] using arrows
         """
         
-        schema = Schema.from_pandas(obj) #if isinstance(obj, pd.DataFrame) else obj.schema    
+        schema = Schema.from_pandas(obj) if isinstance(obj, pd.DataFrame) else obj.schema    
+        # TODO: Add more types - ./arrow.py
         map_arrow_trino_types = {"string": "VARCHAR", "double": "DOUBLE"}
 
         return ", ".join([
