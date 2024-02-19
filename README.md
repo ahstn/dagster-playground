@@ -1,14 +1,14 @@
 # Dagster Playground
 
-** Table of Contents **
+**Table of Contents**
 
 - [⚙ Setup](#setup)
 - [Dagster Project](#dagster-project)
 - [Docker Compose](#docker-compose)
   - [Trino](#trino)
+  - [Hive MetaStore (TODO)](#hive-metastore)
   - [Metabase](#metabase)
   - [Apache SuperSet](#superset)
-  - Nessie `TODO`
 - [Python Practices](#python-practices)
   - [File & Module Composition](#file--module-composition)
 - [References](#references)
@@ -48,10 +48,18 @@ As you'll notice from these, assets can be a single file, or organised into thei
 
 ### Resources
 
-The Parquet and Snowflake resources are cloned from the Dagster example project: [project_fully_featured | GitHub]
+This project primarily uses [DuckDB] and a Data Lakehouse (Trino, Parquet & Hive) to demonstrate the latest data storage options, and when to best use each.
+
+DuckDB is fantastic for local development, simple to grasp and allows you to quickly move around a lightweight data store, however it doesn't scale particularly well.
+
+A lakehouse trades the ease of use for an extremely high scaling potential, see [Trino](#trino) and [Hive Metastore](#hive-metastore) below, and [Why Lakehouse, Why Now? | Dremio] for more info.
+
+In order to make use of a Lakehouse style architecture, this project contains a custom Trino IO Manager, see [`quickstart_etl/trino_io_manager/README.md`] for more info. 
+
+The Parquet and Snowflake resources are cloned from the Dagster example project: [project_fully_featured | GitHub] as references of simple IO Managers.
 
 
-## Docker Compose
+## Docker Compose & Tech Stack
 
 This project brings up various containers to form it's "data platform".
 
@@ -74,18 +82,16 @@ Respective URLs for UIs:
 
 Trino is a distributed SQL query engine designed to efficiently query vast amounts of data, usually against flat files like parquet. It is also the query engine behind AWS Athena. 
 
+With it being separate from the actual data storage, it can be scaled, deployed and managed independently for any storage or visualisation components. 
+
 It's container is purely the querying aspect of our Lakehouse, while storage and table metadata is handled by Minio (Parquet) and Nessie (Iceberg). See [Iceberg Connector | Trino] for more information.
 
 For clarity, querying does include CRUD operations and isn't limited to `SELECT`s.
 
-#### Admin 
 
-Trino is setup with a test user of `test:test123` to test user & password authentication. For info on how this is managed, see [Password file authentication | Trino].
+### Hive Metastore
 
-```
-USE memory.public;
-SELECT * FROM engineers;
-```
+`TODO`
 
 ### Metabase
 
@@ -101,6 +107,7 @@ NB: On first access, Metabase will prompt you for a user, which can be fake data
 
 The Superset setup here is simplied for local testing, for a more adequate and updated setup, check out [apache/superset | GitHub]
 
+
 ## Python Practices 
 
 ### File & Module Composition
@@ -110,6 +117,22 @@ Single files should be preferred to modules, like how [`quickstart_etl/assets/ir
 When creating modules, `__init__.py` is normally a good starting point for containing everything. However, it can quickly grow, decreasing readability.
 
 To remedy this, we can split `__init__.py` into multiple files, named after their purpose. For example, [`quickstart_etl/assets/pagila`] has a file solely for DBT assets, and one for fetching PostgreSQL data.
+
+### Chunked Loading SQL Dataframe
+
+When fetching large tables from a database, it's fairly easy to overload your RAM. To avoid this, we instruct Pandas to load in chunks:
+
+```
+def customer(psql: PagilaDatabase) -> pd.DataFrame:
+    return pd.concat(
+        pd.read_sql(
+            "SELECT * FROM my_table", 
+            psql.connection(), 
+            chunksize=10000
+        ), 
+        ignore_index=True
+    )
+```
 
 
 ## References
@@ -128,6 +151,7 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 [`quickstart_etl/assets/iris_csv.py`]: ./quickstart_etl/assets/iris_csv.py
 [`quickstart_etl/__init__.py`]: ./quickstart_etl/__init__.py
 [`docker/metabase/Dockerfile`]: ./docker/metabase/Dockerfile
+[`quickstart_etl/trino_io_manager/README.md`]: ./quickstart_etl/trino_io_manager/README.md
 
 [project_fully_featured | GitHub]: https://github.com/dagster-io/dagster/tree/master/examples/project_fully_featured
 [Software Defined Assets | Dagster]: https://docs.dagster.io/concepts/assets/software-defined-assets
@@ -146,3 +170,4 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 [apache/superset | GitHub]: https://github.com/apache/superset
 [Password file authentication | Trino]: https://trino.io/docs/current/security/password-file.html
 [andreapiso/dagster-trino | GitHub]: https://github.com/andreapiso/dagster-trino
+[DuckDB]: https://duckdb.org/
