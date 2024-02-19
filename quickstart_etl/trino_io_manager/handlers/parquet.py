@@ -8,7 +8,7 @@ from sqlalchemy import text
 from typing import Union
 from fsspec import filesystem
 
-from .data_type_mapping import map_arrow_trino_types
+from .data_type_mapping import map_pandas_trino_types
 
     
 class ParquetTypeHandler(DbTypeHandler):
@@ -30,16 +30,19 @@ class ParquetTypeHandler(DbTypeHandler):
 
         return os.path.dirname(file_path)
         
-    def build_columns_string(self, obj: Union[pd.DataFrame, pa.Table]) -> str:
+    def build_columns_string(self, context: OutputContext, obj: Union[pd.DataFrame, pa.Table]) -> str:
         """
         Map column types [pandas || pyarrow] -> [trino] using arrows
         """
+
+        columns: List[str] = []
+        for column, dtype in zip(obj.columns, obj.dtypes):
+            if str(dtype) not in map_pandas_trino_types:
+                context.log.info(f"Unsupported type {dtype} for column {column}")
+
+            columns += [f"{column} {map_pandas_trino_types[str(dtype)]}"]
         
-        schema = Schema.from_pandas(obj) if isinstance(obj, pd.DataFrame) else obj.schema    
-        return ", ".join([
-            f"{column} {map_arrow_trino_types[str(dtype)]}" 
-            for column, dtype in zip(schema.names, schema.types)
-        ])
+        return  ','.join(columns)
 
     def handle_output(self, context: OutputContext, ts: TableSlice, obj: pd.DataFrame, connection):
         context.log.info(f"No data to load into Trino, {obj} is empty")
@@ -47,7 +50,7 @@ class ParquetTypeHandler(DbTypeHandler):
             raise ValueError("No data to load into Trino")
         table_dir = self.upload_files(context, ts, obj)
         context.log.info(f"No data to load into Trino, {obj} is empty")
-        columns = self.build_columns_string(obj)
+        columns = self.build_columns_string(context, obj)
     
         try:
             with connection as conn:
