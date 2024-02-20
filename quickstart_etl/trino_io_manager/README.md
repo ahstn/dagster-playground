@@ -14,7 +14,7 @@ It is specifically designed use Pandas DataFrames to generate Parquet files, upl
 ## Usage
 
 > [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
+> This module is very much a work in progress, with certain functionality missing.
 
 To use the trino_io_manager, you need to include it in your `resources` definition. Here's an example:
 
