@@ -58,7 +58,7 @@ defs = Definitions(
                 "protocol": "s3a",
                 "key": "minio",
                 "secret": "minio123",
-                "endpoint_url": "http://localhost:9000"
+                "endpoint_url": "http://localhost:4566"
             },
         )
         # "trino_io_manager": build_trino_io_manager([ParquetTypeHandler()]).configured({

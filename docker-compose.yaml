@@ -28,6 +28,20 @@ services:
       - hive-metastore
       - mariadb
       - minio
+      - localstack
+  
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - 4566:4566
+      - 4463-4499:4463-4499
+    environment:
+      - SERVICES=s3
+      - PROVIDER_OVERRIDE_S3=asf
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - ./docker/localstack:/etc/localstack/init/ready.d
   
   # Hive MetaStore backed by MariaDB for Table metadata
   hive-metastore:
@@ -67,7 +81,7 @@ services:
       MINIO_REGION_NAME: "us-east-1"
       MINIO_REGION: "us-east-1"
     ports:
-      - 9001:9001 # UI Access
+      - 9005:9001 # UI Access
       - 9000:9000
     command: server /data --console-address ":9001"
 
