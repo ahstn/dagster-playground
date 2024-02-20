@@ -12,9 +12,7 @@ from .assets.iris_csv import iris_cleaned, iris_dataset
 from .assets.pagila.dbt import dbt_resource as pagila_dbt
 from .resources.infra import PagilaDatabase
 from .resources.trino import TrinoDatabase
-from .trino_io_manager.fs import build_fsspec_resource
-from .trino_io_manager import build_trino_io_manager, TrinoIOManager
-from .trino_io_manager.handlers.parquet import ParquetTypeHandler
+from .trino_io_manager import TrinoIOManager
 from .assets.pagila.trino import load_trino
 
 pagila_assets = load_assets_from_package_module(
