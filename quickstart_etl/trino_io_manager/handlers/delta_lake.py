@@ -5,6 +5,7 @@ from dagster._core.storage.db_io_manager import DbTypeHandler, TableSlice
 from sqlalchemy import text
 from fsspec import filesystem
 from deltalake import write_deltalake
+from sqlalchemy.exc import SqlAlchemyError
 
 class DeltaLakeHandler(DbTypeHandler):
     def handle_output(self, context: OutputContext, table_slice: TableSlice, df: pd.DataFrame, connection):
@@ -15,25 +16,31 @@ class DeltaLakeHandler(DbTypeHandler):
         local_path = path_join("target", table_slice.schema, table_slice.table)
         fs = filesystem(**context.resource_config.get("fs_config"))
         fs.makedirs(dirname(local_path), exist_ok=True)
-        write_deltalake(local_path, df, mode='overwrite')
+        write_deltalake(local_path, df, mode='overwrite', storage_options=context.resource_config.get("fs_config"))
 
-        remote_path = path_join("s3a://warehouse", "delta", table_slice.schema, table_slice.table)
-        fs.put(local_path, remote_path, recursive=True)
+        # remote_path = path_join("s3a://warehouse", "delta", table_slice.schema, table_slice.table)
+        # fs.put(local_path, remote_path, recursive=True)
 
         context.add_output_metadata({
             "local_path": local_path,
             remote_path: remote_path
         })
 
-        with connection as conn:
-            conn.execute(text(f"""
-                CALL delta.system.register_table(
-                    schema_name => '{table_slice.schema}', 
-                    table_name => '{table_slice.table}', 
-                    table_location => '{remote_path}'
-                )
-            """))
-            conn.commit()
+        try:
+            with connection as conn:
+                conn.execute(text(f"""
+                    CALL delta.system.register_table(
+                        schema_name => '{table_slice.schema}', 
+                        table_name => '{table_slice.table}', 
+                        table_location => '{remote_path}'
+                    )
+                """))
+                conn.commit()
+        except SqlAlchemyError as e:
+            if "Table already exists" in str(e):
+                context.log.info(f"Table {table_slice.schema}.{table_slice.table} already exists")
+                pass
+
             
     def load_input(self, context: InputContext, table_slice: TableSlice, connection):
         return pd.read_sql(f"SELECT * FROM {table_slice.schema}.{table_slice.table}", connection)

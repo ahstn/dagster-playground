@@ -29,6 +29,22 @@ services:
       - mariadb
       - minio
       - localstack
+
+  # Settings and configurations that are common for all containers
+  minio:
+    image: docker.io/bitnami/minio:2024
+    ports:
+      - '9000:9000'
+      - '7000:9001'
+    volumes:
+      - ${PWD}/docker/minio/data:/data
+    environment:
+      MINIO_ROOT_USER: minio-root-user
+      MINIO_ROOT_PASSWORD: minio-root-password
+      MINIO_DEFAULT_BUCKETS: lakehouse,tmp
+      MINIO_SERVER_ACCESS_KEY: "minio"
+      MINIO_SERVER_SECRET_KEY: "minio123"
+      # MINIO_HTTP_TRACE: /opt/bitnami/minio/log/minio.log
   
   localstack:
     image: localstack/localstack:latest
@@ -61,29 +77,6 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
       MYSQL_DATABASE: metastore_db
-
-  
-  # Nessie Catalog Server Using In-Memory Store
-  nessie:
-    image: ghcr.io/projectnessie/nessie:0.76.5
-    ports:
-      - 19120:19120
-
-  # Minio Storage Server
-  minio:
-    image: minio/minio:RELEASE.2023-07-21T21-12-44Z
-    environment:
-      MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "password"
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
-      MINIO_DOMAIN: "storage"
-      MINIO_REGION_NAME: "us-east-1"
-      MINIO_REGION: "us-east-1"
-    ports:
-      - 9005:9001 # UI Access
-      - 9000:9000
-    command: server /data --console-address ":9001"
 
   # Metabase 
   # curl -kL -o /plugins/duckdb.metabase-driver.jar https://github.com/AlexR2D2/metabase_duckdb_driver/releases/download/0.2.3/duckdb.metabase-driver.jar
