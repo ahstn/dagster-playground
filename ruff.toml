@@ -1,3 +1,25 @@
+# https://docs.astral.sh/ruff/rules/ 
+
 line-length = 120
 indent-width = 4
 target-version = "py310"
+fix = true
+
+
+[lint]
+select = [
+    "E4", "E7", "E9",   # pycodestyle 
+    "B",                # bug bear
+    "F",                # pyflakes
+    "ISC",              # implict str concat
+    "ICN",              # community import conventions
+    "RUF005",           # ruff
+    "TID"               # tidy imports
+]
+fixable = ["ALL"]
+
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
