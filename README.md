@@ -19,15 +19,15 @@
 
 ## Setup
 
-Assuming you have Python installed, run the following to install dependencies and start Dagster:
+This project uses [Rye] to manage Python versions and dependencies. 
 
+
+After [Installation | Rye], run the following to download dependencies and start Dagster:
 ```bash
-# Optional virtual environment setup
-python3 -m venv .venv
-source .venv/bin/activate
+rye sync
 
-pip install -e ".[dev]"
-dagster dev
+# aliased to 'dagster dev' - see pyproject.toml
+rye run dev 
 ```
 
 ## Dagster Project
@@ -153,6 +153,8 @@ def customer(psql: PagilaDatabase) -> pd.DataFrame:
 [`docker/metabase/Dockerfile`]: ./docker/metabase/Dockerfile
 [`quickstart_etl/trino_io_manager/README.md`]: ./quickstart_etl/trino_io_manager/README.md
 
+[rye]: https://rye-up.com/
+[Installation | Rye]: https://rye-up.com/guide/installation/
 [project_fully_featured | GitHub]: https://github.com/dagster-io/dagster/tree/master/examples/project_fully_featured
 [Software Defined Assets | Dagster]: https://docs.dagster.io/concepts/assets/software-defined-assets
 [metabase-duckdb-driver | GitHub]: https://github.com//AlexR2D2/metabase_duckdb_driver

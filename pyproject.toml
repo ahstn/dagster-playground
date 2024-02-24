@@ -1,6 +1,49 @@
+[project]
+name="quickstart_etl"
+version = "0.1.0"
+description="Playground for experimenting with Dagster"
+url="https://github.com/ahstn/dagster-playground"
+license="MIT"
+authors = [
+    { name = "Adam Houston", email = "phazyy9@gmail.com" }
+]
+dependencies = [
+    "dagster>=1.6.6",
+    "dagster-graphql>=1.6.6",
+    "dagster-webserver>=1.6.6",
+    "dagster-duckdb>=0.22.6",
+    "duckdb>=0.10.0",
+    "trino[sqlalchemy]>=0.328.0",
+    "fsspec>=2024.2.0",
+    "s3fs>=2024.2.0",
+    "pyarrow>=15.0.0",
+    "python-dotenv>=1.0.1",
+    "dagster-duckdb-pandas>=0.22.6",
+    "dagster-dbt>=0.22.6",
+    "dbt-duckdb>=1.7.2",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ruff>=0.2.2",
+    "pandas-stubs>=2.2.0.240218",
+]
+
+[tool.rye.scripts]
+dev = "dagster dev"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["quickstart_etl"]
 
 [tool.dagster]
 module_name = "quickstart_etl"
