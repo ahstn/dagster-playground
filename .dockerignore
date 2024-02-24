@@ -1,6 +1,9 @@
+.venv/
+
 pagila_dbt/logs
 pagila_dbt/dbt_packages
 pagila_dbt/target
 pagila_dbt/.user.yml
 pagila_dbt/*.duckdb
+
 *.duckdb
