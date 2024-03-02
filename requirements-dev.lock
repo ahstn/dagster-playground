@@ -29,8 +29,6 @@ anyio==4.3.0
     # via gql
     # via starlette
     # via watchfiles
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via aiohttp
     # via jsonschema
@@ -96,8 +94,6 @@ duckdb==0.10.0
     # via dagster-duckdb
     # via dbt-duckdb
     # via quickstart-etl
-exceptiongroup==1.2.0
-    # via anyio
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
@@ -261,7 +257,7 @@ rich==13.7.0
 rpds-py==0.18.0
     # via jsonschema
     # via referencing
-ruff==0.2.2
+ruff==0.3.0
 s3fs==2024.2.0
     # via quickstart-etl
 six==1.16.0
@@ -302,7 +298,6 @@ types-pytz==2024.1.0.20240203
     # via pandas-stubs
 typing-extensions==4.9.0
     # via alembic
-    # via anyio
     # via dagster
     # via dbt-core
     # via dbt-semantic-interfaces
@@ -311,7 +306,6 @@ typing-extensions==4.9.0
     # via pydantic-core
     # via sqlalchemy
     # via typer
-    # via uvicorn
 tzdata==2024.1
     # via pandas
     # via pendulum
