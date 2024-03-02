@@ -52,7 +52,7 @@ defs = Definitions(
     }
 ```
 
-Behind the scenes `SQLAlchemy` is used in [`db_client.py] to create the connection to Trino, this client is then tied to our [`io_manager.py`]. While [`io_manager.py`] lays the foundation, the majority of heavy lifting is done in [`handlers/parquet.py`].
+Behind the scenes `SQLAlchemy` is used in [`db_client.py`] to create the connection to Trino, this client is then tied to our [`io_manager.py`]. While [`io_manager.py`] lays the foundation, the majority of heavy lifting is done in [`handlers/parquet.py`].
 
 Different handlers can be created for accepting other formats, loading data via different means. `ParquetTypeHandler` firstly generates Parquet files using [`pyarrow`], which are passed to [`fsspec`] for uploading, depending on `"bucket"` in the example above.
 
