@@ -120,19 +120,40 @@ To remedy this, we can split `__init__.py` into multiple files, named after thei
 
 ### Chunked Loading SQL Dataframe
 
-When fetching large tables from a database, it's fairly easy to overload your RAM. To avoid this, we instruct Pandas to load in chunks:
+When fetching large tables from a database, it's fairly easy to overload your RAM. The following are ways to avoid this: (ordered least to most intrusive)
 
-```
-def customer(psql: PagilaDatabase) -> pd.DataFrame:
-    return pd.concat(
-        pd.read_sql(
-            "SELECT * FROM my_table", 
+1. Instruct Pandas to load tables in chunks:
+    ```py
+    def customer(psql: PagilaDatabase) -> pd.DataFrame:
+        return pd.concat(
+            pd.read_sql(
+                "my_table", 
+                psql.connection(), 
+                chunksize=10000
+            ), # returns Iterator[pd.DataFrame]
+            ignore_index=True
+        )
+    ```
+
+2. Another technique is using `pyarrow` as a types backend rather than `numpy`. [PyArrow | Arrow Docs] exposes bindings from the C++ Apache Arrow library, these static types use less bytes than the dynamic fashion of Python and NumPy:
+
+    ```py
+    def customer(psql: PagilaDatabase) -> pd.DataFrame:
+        return pd.read_sql("my_table", psql.connection(), dtype_backend="pyarrow")
+    ```
+
+    This difference can be seen by running `df.memory_usage(deep=True).sum() / 1024**2` to fetch the MB usage of a DataFrame, and `df.memory_usage(deep=True)` to display the bytes taken by each field.
+
+3. For extremely wide tables (many columns), restricting the DataFrame to specific columns can have a major impact:
+
+    ```py
+    def customer(psql: PagilaDatabase) -> pd.DataFrame:
+        return pd.read_sql(
+            "my_table", 
             psql.connection(), 
-            chunksize=10000
-        ), 
-        ignore_index=True
-    )
-```
+            columns=["id", "forename", "surname", "dob"],
+            dtype_backend="pyarrow"
+        )
 
 
 ## References
